@@ -1,9 +1,10 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Networking;
 using UnityEngine.UI;
 
-public class PlayerController : MonoBehaviour{
+public class PlayerController : NetworkBehaviour{
     // Components
     private Animator animator;
     private CharacterController characterController;
@@ -21,10 +22,18 @@ public class PlayerController : MonoBehaviour{
     public ParticleSystem deathParticles;
 
     void Start(){
+        if (!hasAuthority){
+            return;
+        }
+        
         StartUp();
     }
 
     void Update(){
+        if (!hasAuthority){
+            return;
+        }
+        
         InputManager();
         CameraControl();
         Combat();

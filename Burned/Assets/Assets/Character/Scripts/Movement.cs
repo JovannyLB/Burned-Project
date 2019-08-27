@@ -2,9 +2,10 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UIElements;
+using UnityEngine.Networking;
 
 [RequireComponent(typeof(CharacterController))]
-public class Movement : MonoBehaviour{
+public class Movement : NetworkBehaviour{
 
     [Header("Movement data")]
     [SerializeField] private float rotationSpeed = 0.3f;
@@ -44,10 +45,18 @@ public class Movement : MonoBehaviour{
     private PositionState positionState;
 
     void Start(){
+        if (!hasAuthority){
+            return;
+        }
+        
         StartUp();
     }
 
     void Update(){
+        if (!hasAuthority){
+            return;
+        }
+        
         InputManager();
         InputDecider();
         MovementManager();
