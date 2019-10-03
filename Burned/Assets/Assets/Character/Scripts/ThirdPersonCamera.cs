@@ -34,12 +34,13 @@ public class ThirdPersonCamera : MonoBehaviour{
         transform.eulerAngles = currentRotation;
 
         RaycastHit hit;
+        LayerMask mask = LayerMask.GetMask("Scenery");
 
-        if (Physics.Linecast(target.transform.position, target.position - transform.forward * distanceFromTarget, out hit) && !target.transform.root.GetComponent<PlayerController>().aiming){
-            print(hit.distance);
+        if (Physics.Linecast(target.transform.position, target.position - transform.forward * distanceFromTarget, out hit, mask) && !target.transform.root.GetComponent<PlayerController>().aiming){
+//            print(hit.distance + " " + hit.transform.name);
             actualDistanceFromTarget = hit.distance;
-        } else if (Physics.Linecast(target.transform.position, target.position - transform.forward * distanceFromTargetAim, out hit) && target.transform.root.GetComponent<PlayerController>().aiming){
-            print(hit.distance);
+        } else if (Physics.Linecast(target.transform.position, target.position - transform.forward * distanceFromTargetAim, out hit, mask) && target.transform.root.GetComponent<PlayerController>().aiming){
+//            print(hit.distance + " " + hit.transform.name);
             actualDistanceFromTarget = hit.distance;
         } else{
             if (!target.transform.root.GetComponent<PlayerController>().aiming){

@@ -30,41 +30,45 @@ public class BallController : MonoBehaviour{
     private void BallControl(){
         switch (ballState){
             case BallState.BeingHeld:
+                GetComponent<TrailRenderer>().emitting = false;
                 
                 ballRB.useGravity = false;
                 ballRB.isKinematic = true;
                 ballRB.collisionDetectionMode = CollisionDetectionMode.Discrete;
                 ballRB.drag = 0;
 
-                if (player.GetComponent<PlayerController>().aiming){
-                    int layerMask = LayerMask.GetMask("Scenery", "Enemy");
-
-                    Ray ray = Camera.main.ViewportPointToRay(new Vector3(0.5F, 0.5F, 0));
-                    RaycastHit hit;
-                    if (Physics.Raycast(ray, out hit, 1000f, layerMask)){
-                        transform.LookAt(hit.point);
-                    }
-                }
-
                 if (Input.GetMouseButtonDown(0)){
+                    if (player.GetComponent<PlayerController>().aiming){
+                        int layerMask = LayerMask.GetMask("Scenery", "Enemy");
+
+                        Ray ray = Camera.main.ViewportPointToRay(new Vector3(0.5F, 0.5F, 0));
+                        RaycastHit hit;
+                        if (Physics.Raycast(ray, out hit, 1000f, layerMask)){
+                            transform.LookAt(hit.point);
+                        }
+                    }
+                    
                     BallThrow();
                 }
                 break;
             case BallState.Active:
-                if (ballRB.velocity.magnitude <= minSpeed){
-                    ballState = BallState.Inactive;
-                }
-                
+                GetComponent<TrailRenderer>().emitting = true;
+
                 ballRB.useGravity = false;
                 ballRB.isKinematic = false;
                 ballRB.collisionDetectionMode = CollisionDetectionMode.ContinuousDynamic;
                 ballRB.drag = 0;
                 
+                if (ballRB.velocity.magnitude <= minSpeed && ballRB.velocity.magnitude > 0){
+                    ballState = BallState.Inactive;
+                }
+
                 if (Input.GetKeyDown(KeyCode.E)){
                     ballState = BallState.Inactive;
                 }
                 break;
             case BallState.Inactive:
+                GetComponent<TrailRenderer>().emitting = true;
                 
                 ballRB.useGravity = true;
                 ballRB.isKinematic = false;
@@ -79,8 +83,6 @@ public class BallController : MonoBehaviour{
     }
 
     private void BallThrow(){
-        ballState = BallState.Active;
-        
         ballRB.useGravity = false;
         ballRB.isKinematic = false;
         ballRB.collisionDetectionMode = CollisionDetectionMode.ContinuousDynamic;
@@ -88,6 +90,7 @@ public class BallController : MonoBehaviour{
         
         transform.parent = null;
         ballRB.AddForce(transform.forward * throwPower, ForceMode.Impulse);
+        ballState = BallState.Active;
     }
 
     private void BallBack(){
@@ -105,17 +108,15 @@ public class BallController : MonoBehaviour{
 
     private void OnCollisionEnter(Collision other){
         if (other.transform.name == "Enemy Body" && ballState == BallState.Active){
+            print("hit");
             ballState = BallState.Inactive;
             StartCoroutine(other.transform.root.GetComponent<Enemy>().Death());
-        } else if (other.transform.CompareTag("Player")){
-            BallBack();
         }
     }
 
     private void OnTriggerEnter(Collider other){
-        if (other.transform.name == "Enemy Body"){
-            ballState = BallState.Inactive;
-            StartCoroutine(other.transform.root.GetComponent<Enemy>().Death());
+        if (other.transform.CompareTag("Player")){
+            BallBack();
         }
     }
 }

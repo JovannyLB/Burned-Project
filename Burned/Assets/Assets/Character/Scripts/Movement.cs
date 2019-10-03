@@ -1,5 +1,6 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
+using DG.Tweening;
 using UnityEngine;
 using UnityEngine.UIElements;
 
@@ -14,9 +15,13 @@ public class Movement : MonoBehaviour{
     [SerializeField] public float aimSpeed;
     [SerializeField] public float jumpForce;
     [SerializeField][Range(0, 1)] public float gravityMultiplier;
+    [SerializeField][Range(0, 1)] public float startUpModifier;
 
     // Inputs, turnspeed and gravity
-    private float inputX, inputZ, turnSpeed, gravity;
+    private float inputX, inputZ, turnSpeed, gravity, targerSpeed;
+    
+    // Inputs
+    private bool shiftLeft, controlLeft, spaceBar;
     
     // Is able to run
     private bool canRun;
@@ -47,10 +52,19 @@ public class Movement : MonoBehaviour{
         StartUp();
     }
 
+    public float testSpeedup, maxSpeedup;
+
     void Update(){
         InputManager();
         InputDecider();
         MovementManager();
+
+        if (desiredMoveDirection != Vector3.zero){
+            DOTween.To(()=> testSpeedup, x=> testSpeedup = x, maxSpeedup, 1);
+        }
+        else{
+            testSpeedup = 0;
+        }
     }
 
     // Gets the components
@@ -66,6 +80,11 @@ public class Movement : MonoBehaviour{
         // Axis
         inputX = Input.GetAxis("Horizontal");
         inputZ = Input.GetAxis("Vertical");
+        
+        // Keys
+        shiftLeft = Input.GetKey(KeyCode.LeftShift);
+        spaceBar = Input.GetKey(KeyCode.Space);
+        controlLeft = Input.GetKey(KeyCode.LeftControl);
 
         aiming = GetComponent<PlayerController>().aiming;
     }
@@ -104,7 +123,7 @@ public class Movement : MonoBehaviour{
         float endSpeed;
 
         // Checks if playsr can run and is running
-        if (Input.GetKey(KeyCode.LeftShift) && canRun){
+        if (shiftLeft && canRun){
             endSpeed = sprintSpeed;
         } else if (aiming){
             endSpeed = aimSpeed;
@@ -112,9 +131,6 @@ public class Movement : MonoBehaviour{
             endSpeed = moveSpeed;
         }
         
-        // Applies said speed to the movement
-        moveDirection = new Vector3(desiredMoveDirection.x * endSpeed, moveDirection.y, desiredMoveDirection.z * endSpeed);
-
         // Creates gravity
         gravity -= 9.8f * Time.deltaTime;
         gravity *= gravityMultiplier;
@@ -123,13 +139,30 @@ public class Movement : MonoBehaviour{
         
         // Jump check
         if (isGrounded()){
-            if (Input.GetKey(KeyCode.Space)){
+            if (spaceBar){
+                // Adds vertical force
                 positionState = PositionState.onAir;
                 moveDirection.y = jumpForce;
             }
             else{
                 positionState = PositionState.onGround;
                 moveDirection.y = 0;
+                // Applies said speed to the movement if on ground (lets jump carry over speed)
+                if (controlLeft && !aiming){
+                    // Applies movement when sliding if sliding is possible (speed-wise)
+                    if (moveDirection.magnitude >= 2){
+                        moveDirection *= endSpeed >= 15 ? 0.985f : 0.970f;
+                    }
+                    else{
+                        moveDirection = Vector3.zero;
+                    }
+                }
+                else{
+                    // Applies movement when on ground and standing (Smooths out the start)
+                    DOTween.To(()=> targerSpeed, x=> targerSpeed = x, endSpeed, 0.5f);
+//                    moveDirection = new Vector3(desiredMoveDirection.x * endSpeed, moveDirection.y, desiredMoveDirection.z * endSpeed);
+                    moveDirection = new Vector3(desiredMoveDirection.x * targerSpeed, moveDirection.y, desiredMoveDirection.z * targerSpeed);
+                }
             }
             gravity = 0f;
         }

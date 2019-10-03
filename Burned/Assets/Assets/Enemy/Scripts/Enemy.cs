@@ -18,7 +18,8 @@ public class Enemy : MonoBehaviour{
     public enum Direction{
         GoX,
         GoY,
-        GoZ
+        GoZ,
+        NoAxis
     }
     public Direction direction;
 
@@ -93,6 +94,19 @@ public class Enemy : MonoBehaviour{
                     enemyRigidbody.velocity = new Vector3(0, 0, -speed);
                 }
                 break;
+            case Direction.NoAxis:
+                if (enemy.transform.localPosition.z >= distance){
+                    goRight = false;
+                }
+                else if (enemy.transform.localPosition.z <= -distance){
+                    goRight = false;
+                }
+                if (goRight){
+                    enemyRigidbody.velocity = Vector3.zero;
+                } else if (!goRight){
+                    enemyRigidbody.velocity = Vector3.zero;
+                }
+                break;
         }
     }
     
@@ -101,7 +115,7 @@ public class Enemy : MonoBehaviour{
         
 //        LockUnlockRotation(false);
 
-        yield return new WaitForSeconds(0.15f);
+        yield return new WaitForSeconds(0.25f);
         var currentDeathParticle = Instantiate(deathParticles, enemy.transform.position, Quaternion.identity);
         
         ParticleSystem.ShapeModule editableShape = currentDeathParticle.shape;
