@@ -10,6 +10,8 @@ public class BallController : MonoBehaviour{
     public float throwPower;
     public float minSpeed;
 
+    public ParticleSystem impactParticle;
+
     public GameObject player;
 
     public enum BallState{
@@ -63,7 +65,7 @@ public class BallController : MonoBehaviour{
                     ballState = BallState.Inactive;
                 }
 
-                if (Input.GetKeyDown(KeyCode.E)){
+                if (Input.GetKeyDown(KeyCode.E) && GameController.gameType == GameController.GameType.Testing){
                     ballState = BallState.Inactive;
                 }
                 break;
@@ -75,7 +77,7 @@ public class BallController : MonoBehaviour{
                 ballRB.collisionDetectionMode = CollisionDetectionMode.ContinuousDynamic;
                 ballRB.drag = 0.1f;
                 
-                if (Input.GetMouseButtonDown(1)){
+                if (Input.GetMouseButtonDown(1) && GameController.gameType == GameController.GameType.Testing){
                     BallBack();
                 }
                 break;
@@ -112,11 +114,24 @@ public class BallController : MonoBehaviour{
             ballState = BallState.Inactive;
             StartCoroutine(other.transform.root.GetComponent<Enemy>().Death());
         }
+
+        if (ballState == BallState.Active){ 
+            SpawnImpact();
+        }
     }
 
     private void OnTriggerEnter(Collider other){
         if (other.transform.CompareTag("Player")){
             BallBack();
         }
+    }
+
+    private void SpawnImpact(){
+        var currentImpactParticle = Instantiate(impactParticle, transform.position, Quaternion.identity);
+        
+        ParticleSystem.VelocityOverLifetimeModule editableVelocity = currentImpactParticle.velocityOverLifetime;
+        editableVelocity.x = ballRB.velocity.x;
+        editableVelocity.y = ballRB.velocity.y;
+        editableVelocity.z = ballRB.velocity.z;
     }
 }

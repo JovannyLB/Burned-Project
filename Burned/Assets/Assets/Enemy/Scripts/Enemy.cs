@@ -128,15 +128,20 @@ public class Enemy : MonoBehaviour{
         
         enemy.SetActive(false);
 
-        yield return new WaitForSeconds(5f);
-        
-        enemy.transform.position = transform.position;
-        enemy.transform.rotation = originalRotation;
+        // Checks the type of game mode to determine if the enemy will respawn
+        if (GameController.gameType == GameController.GameType.Training){
+            yield return new WaitForSeconds(5f);
+
+            enemy.transform.position = transform.position;
+            enemy.transform.rotation = originalRotation;
 //        LockUnlockRotation(true);
 
-        enemy.SetActive(true);
-        
-        hitState = HitState.NotHit;
+            enemy.SetActive(true);
+
+            hitState = HitState.NotHit;
+        } else if (GameController.gameType == GameController.GameType.Timing){
+            FindObjectOfType<GameController>().currentPoints++;
+        }
     }
 
     private void LockUnlockRotation(bool lockUnlock){

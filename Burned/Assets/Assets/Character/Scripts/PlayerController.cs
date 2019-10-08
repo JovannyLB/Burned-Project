@@ -15,7 +15,7 @@ public class PlayerController : MonoBehaviour{
     [HideInInspector] public bool aiming;
 
     // UI
-    public Image crossHair;
+    private Image crossHair;
     
     // Particles
     public ParticleSystem deathParticles;
@@ -30,7 +30,7 @@ public class PlayerController : MonoBehaviour{
         Combat();
         Animation();
 
-        if (Input.GetKeyDown(KeyCode.F)){
+        if (Input.GetKeyDown(KeyCode.F) && GameController.gameType == GameController.GameType.Testing){
             Death();
         }
     }
@@ -40,6 +40,7 @@ public class PlayerController : MonoBehaviour{
         // Animator
         animator = GetComponent<Animator>();
         characterController = GetComponent<CharacterController>();
+        crossHair = GameObject.FindGameObjectWithTag("Crosshair").GetComponent<Image>();
     }
 
     // Gets inputs
@@ -54,6 +55,18 @@ public class PlayerController : MonoBehaviour{
         if (aiming){
             transform.rotation = Quaternion.Slerp(transform.rotation, Quaternion.LookRotation(Camera.main.transform.forward), 0.3f);
             crossHair.enabled = true;
+            
+            // Makes the crosshair red if it's pointed at an enemy
+            int layerMask = LayerMask.GetMask("Scenery", "Enemy");
+
+            Ray ray = Camera.main.ViewportPointToRay(new Vector3(0.5F, 0.5F, 0));
+            RaycastHit hit;
+            if (Physics.Raycast(ray, out hit, 1000f, layerMask) && hit.transform.name == "Enemy Body"){
+                crossHair.color = Color.red;
+            }
+            else{
+                crossHair.color = Color.white;
+            }
         }
         else{
             crossHair.enabled = false;

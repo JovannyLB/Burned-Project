@@ -18,14 +18,7 @@ public class ThirdPersonCamera : MonoBehaviour{
     private Vector3 rotationSmoothVelocity, currentRotation;
     private float yaw, pitch;
 
-    private bool cursorLock = true;
-
     void LateUpdate(){
-        if (cursorLock){
-            Cursor.visible = false;
-            Cursor.lockState = CursorLockMode.Locked;
-        }
-        
         yaw += Input.GetAxis("Mouse X") * (target.transform.root.GetComponent<PlayerController>().aiming ? mouseSensitivityAim : mouseSensitivity);
         pitch -= Input.GetAxis("Mouse Y") * (target.transform.root.GetComponent<PlayerController>().aiming ? mouseSensitivityAim : mouseSensitivity);
         pitch = Mathf.Clamp(pitch, pitchMinMax.x, pitchMinMax.y);
