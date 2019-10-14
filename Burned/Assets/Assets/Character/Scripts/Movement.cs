@@ -18,7 +18,7 @@ public class Movement : MonoBehaviour{
     [SerializeField][Range(0, 1)] public float startUpModifier;
 
     // Inputs, turnspeed and gravity
-    private float inputX, inputZ, turnSpeed, gravity, targerSpeed;
+    private float inputX, inputZ, turnSpeed, gravity, targerSpeed, endSpeed;
     
     // Inputs
     private bool shiftLeft, controlLeft, spaceBar;
@@ -48,23 +48,17 @@ public class Movement : MonoBehaviour{
     }
     private PositionState positionState;
 
+    private Animator animator;
+
     void Start(){
         StartUp();
     }
-
-    public float testSpeedup, maxSpeedup;
 
     void Update(){
         InputManager();
         InputDecider();
         MovementManager();
-
-        if (desiredMoveDirection != Vector3.zero){
-            DOTween.To(()=> testSpeedup, x=> testSpeedup = x, maxSpeedup, 1);
-        }
-        else{
-            testSpeedup = 0;
-        }
+        AnimationHandler();
     }
 
     // Gets the components
@@ -73,6 +67,8 @@ public class Movement : MonoBehaviour{
         characterController = GetComponent<CharacterController>();
         // Main camera
         cam = Camera.main;
+        // Animator
+        animator = transform.GetChild(0).GetComponent<Animator>();
     }
 
     // Gets the inputs
@@ -120,7 +116,7 @@ public class Movement : MonoBehaviour{
     // Controls the movement
     private void MovementManager(){
         // Gets the actual speed
-        float endSpeed;
+//        float endSpeed;
 
         // Checks if playsr can run and is running
         if (shiftLeft && canRun){
@@ -203,6 +199,13 @@ public class Movement : MonoBehaviour{
 
         // If state machine is on air, then return normal ground check
         return characterController.isGrounded;
+    }
+
+    private void AnimationHandler(){
+        animator.SetFloat("X direction", inputX);
+        animator.SetFloat("Y direction", inputZ);
+        animator.SetFloat("Speed", moveDirection.magnitude > 0.5f ? moveDirection.magnitude : 0f);
+        animator.SetBool("Grounded", positionState == PositionState.onAir);
     }
 
 }

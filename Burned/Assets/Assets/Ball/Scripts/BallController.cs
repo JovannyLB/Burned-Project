@@ -12,7 +12,7 @@ public class BallController : MonoBehaviour{
 
     public ParticleSystem impactParticle;
 
-    public GameObject player;
+    public GameObject player, hand;
 
     public enum BallState{
         BeingHeld,
@@ -103,9 +103,9 @@ public class BallController : MonoBehaviour{
         ballRB.isKinematic = true;
         ballRB.drag = 0;
         
-        transform.parent = player.transform;
-        transform.position = player.transform.GetChild(2).transform.position;
-        transform.rotation = player.transform.GetChild(2).transform.rotation;
+        transform.parent = hand.transform;
+        transform.position = hand.transform.position;
+        transform.rotation = hand.transform.rotation;
     }
 
     private void OnCollisionEnter(Collision other){

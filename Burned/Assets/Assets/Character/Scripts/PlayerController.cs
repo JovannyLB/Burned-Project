@@ -28,7 +28,6 @@ public class PlayerController : MonoBehaviour{
         InputManager();
         CameraControl();
         Combat();
-        Animation();
 
         if (Input.GetKeyDown(KeyCode.F) && GameController.gameType == GameController.GameType.Testing){
             Death();
@@ -77,11 +76,6 @@ public class PlayerController : MonoBehaviour{
     private void Combat(){
         // Checks if character is aiming
         aiming = rightMouseButton;
-    }
-
-    // Handles animation
-    private void Animation(){
-        
     }
 
     private void Death(){
