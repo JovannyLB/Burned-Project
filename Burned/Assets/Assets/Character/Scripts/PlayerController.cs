@@ -1,11 +1,11 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
+using DG.Tweening;
 using UnityEngine;
 using UnityEngine.UI;
 
 public class PlayerController : MonoBehaviour{
     // Components
-    private Animator animator;
     private CharacterController characterController;
 
     // Input bools
@@ -19,6 +19,9 @@ public class PlayerController : MonoBehaviour{
     
     // Particles
     public ParticleSystem deathParticles;
+    
+    // Ball catcher
+    public GameObject ballField;
 
     void Start(){
         StartUp();
@@ -36,8 +39,6 @@ public class PlayerController : MonoBehaviour{
 
     // Gets components
     private void StartUp(){
-        // Animator
-        animator = GetComponent<Animator>();
         characterController = GetComponent<CharacterController>();
         crossHair = GameObject.FindGameObjectWithTag("Crosshair").GetComponent<Image>();
     }
@@ -52,15 +53,19 @@ public class PlayerController : MonoBehaviour{
     private void CameraControl(){
         // Makes the player rotate with the camera if aiming
         if (aiming){
-            transform.rotation = Quaternion.Slerp(transform.rotation, Quaternion.LookRotation(Camera.main.transform.forward), 0.3f);
+            var forward = Camera.main.transform.forward;
+            forward.y = 0;
+            transform.rotation = Quaternion.Slerp(transform.rotation, Quaternion.LookRotation(forward), 0.3f);
             crossHair.enabled = true;
+            
+            
             
             // Makes the crosshair red if it's pointed at an enemy
             int layerMask = LayerMask.GetMask("Scenery", "Enemy");
 
             Ray ray = Camera.main.ViewportPointToRay(new Vector3(0.5F, 0.5F, 0));
             RaycastHit hit;
-            if (Physics.Raycast(ray, out hit, 1000f, layerMask) && hit.transform.name == "Enemy Body"){
+            if (Physics.Raycast(ray, out hit, 1000f, layerMask) && hit.transform.name == "Enemy@T-Pose"){
                 crossHair.color = Color.red;
             }
             else{
@@ -76,13 +81,25 @@ public class PlayerController : MonoBehaviour{
     private void Combat(){
         // Checks if character is aiming
         aiming = rightMouseButton;
+        
+        // Ball force field
+        if (Input.GetKey(KeyCode.Q) && !ballField.activeInHierarchy){
+            ballField.SetActive(true);
+            ballField.transform.localScale = Vector3.zero;
+            ballField.transform.DOScale(new Vector3(7, 7, 7), 1f);
+        }
+        else if(!Input.GetKey(KeyCode.Q) && ballField.activeInHierarchy){
+            ballField.transform.DOScale(new Vector3(0, 0, 0), 1f).OnComplete(() => {
+                ballField.SetActive(false);
+            });
+        }
     }
 
     private void Death(){
         var currentDeathParticle = Instantiate(deathParticles, transform.position, Quaternion.identity);
         
         ParticleSystem.ShapeModule editableShape = currentDeathParticle.shape;
-        editableShape.meshRenderer = transform.GetChild(0).GetComponent<MeshRenderer>();
+        editableShape.skinnedMeshRenderer = transform.GetChild(0).GetChild(2).GetComponent<SkinnedMeshRenderer>();
 
         ParticleSystem.VelocityOverLifetimeModule editableVelocity = currentDeathParticle.velocityOverLifetime;
         editableVelocity.x = characterController.velocity.x;

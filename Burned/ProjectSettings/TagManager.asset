@@ -6,6 +6,7 @@ TagManager:
   tags:
   - Scenery
   - Crosshair
+  - ForceField
   layers:
   - Default
   - TransparentFX

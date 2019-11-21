@@ -1,7 +1,10 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using DG.Tweening;
+using DG.Tweening.Core;
 using UnityEngine;
+using Random = UnityEngine.Random;
 
 public class BallController : MonoBehaviour{
 
@@ -14,6 +17,11 @@ public class BallController : MonoBehaviour{
 
     public GameObject player, hand;
 
+    public AudioClip[] ballAudio;
+    private AudioSource ballAudioSource;
+
+    private bool canBePickedUp;
+
     public enum BallState{
         BeingHeld,
         Active,
@@ -21,8 +29,11 @@ public class BallController : MonoBehaviour{
     }
     public BallState ballState;
 
+    private TweenerCore<UnityEngine.Vector3, UnityEngine.Vector3, DG.Tweening.Plugins.Options.VectorOptions> moveTween;
+
     void Start(){
         ballRB = GetComponent<Rigidbody>();
+        ballAudioSource = GetComponent<AudioSource>();
     }
 
     void Update(){
@@ -32,13 +43,17 @@ public class BallController : MonoBehaviour{
     private void BallControl(){
         switch (ballState){
             case BallState.BeingHeld:
-                GetComponent<TrailRenderer>().emitting = false;
+                GetComponent<TrailRenderer>().emitting = true;
                 
                 ballRB.useGravity = false;
                 ballRB.isKinematic = true;
                 ballRB.collisionDetectionMode = CollisionDetectionMode.Discrete;
                 ballRB.drag = 0;
-
+                
+                if (transform.position != hand.transform.position){
+                    moveTween = transform.DOMove(hand.transform.position, 0.25f);
+                }
+                
                 if (Input.GetMouseButtonDown(0)){
                     if (player.GetComponent<PlayerController>().aiming){
                         int layerMask = LayerMask.GetMask("Scenery", "Enemy");
@@ -52,6 +67,7 @@ public class BallController : MonoBehaviour{
                     
                     BallThrow();
                 }
+
                 break;
             case BallState.Active:
                 GetComponent<TrailRenderer>().emitting = true;
@@ -93,6 +109,8 @@ public class BallController : MonoBehaviour{
         transform.parent = null;
         ballRB.AddForce(transform.forward * throwPower, ForceMode.Impulse);
         ballState = BallState.Active;
+
+        StartCoroutine(BallBackTimer());
     }
 
     private void BallBack(){
@@ -103,14 +121,13 @@ public class BallController : MonoBehaviour{
         ballRB.isKinematic = true;
         ballRB.drag = 0;
         
-        transform.parent = hand.transform;
-        transform.position = hand.transform.position;
+//        transform.parent = hand.transform;
+//        transform.position = hand.transform.position;
         transform.rotation = hand.transform.rotation;
     }
 
     private void OnCollisionEnter(Collision other){
-        if (other.transform.name == "Enemy Body" && ballState == BallState.Active){
-            print("hit");
+        if (other.transform.gameObject.layer == 10 && ballState == BallState.Active){
             ballState = BallState.Inactive;
             StartCoroutine(other.transform.root.GetComponent<Enemy>().Death());
         }
@@ -118,10 +135,12 @@ public class BallController : MonoBehaviour{
         if (ballState == BallState.Active){ 
             SpawnImpact();
         }
+        
+        PlayBallSound();
     }
 
     private void OnTriggerEnter(Collider other){
-        if (other.transform.CompareTag("Player")){
+        if (other.transform.CompareTag("Player") && canBePickedUp || other.transform.CompareTag("ForceField") && canBePickedUp){
             BallBack();
         }
     }
@@ -134,4 +153,17 @@ public class BallController : MonoBehaviour{
         editableVelocity.y = ballRB.velocity.y;
         editableVelocity.z = ballRB.velocity.z;
     }
+
+    private void PlayBallSound(){
+        ballAudioSource.pitch = Random.Range(0.75f, 1.25f);
+        ballAudioSource.volume = ballRB.velocity.magnitude / 60;
+        ballAudioSource.PlayOneShot(ballAudio[Random.Range(0, ballAudio.Length)]);
+    }
+
+    private IEnumerator BallBackTimer(){
+        canBePickedUp = false;
+        yield return new WaitForSeconds(0.5f);
+        canBePickedUp = true;
+    }
+    
 }

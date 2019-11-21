@@ -16,6 +16,7 @@ public class Movement : MonoBehaviour{
     [SerializeField] public float jumpForce;
     [SerializeField][Range(0, 1)] public float gravityMultiplier;
     [SerializeField][Range(0, 1)] public float startUpModifier;
+    [SerializeField] [Range(0, 1)] public float timeMultiplier;
 
     // Inputs, turnspeed and gravity
     private float inputX, inputZ, turnSpeed, gravity, targerSpeed, endSpeed;
@@ -40,6 +41,10 @@ public class Movement : MonoBehaviour{
     // Components
         // Character controller
     private CharacterController characterController;
+    
+    // Sound clips
+    public AudioClip jumpA, fallA;
+    private AudioSource charAudioSource;
 
     // State machines
     public enum PositionState{
@@ -69,6 +74,8 @@ public class Movement : MonoBehaviour{
         cam = Camera.main;
         // Animator
         animator = transform.GetChild(0).GetComponent<Animator>();
+        // Audio source
+        charAudioSource = GetComponent<AudioSource>();
     }
 
     // Gets the inputs
@@ -115,18 +122,22 @@ public class Movement : MonoBehaviour{
 
     // Controls the movement
     private void MovementManager(){
-        // Gets the actual speed
-//        float endSpeed;
-
         // Checks if playsr can run and is running
         if (shiftLeft && canRun){
-            endSpeed = sprintSpeed;
-        } else if (aiming){
-            endSpeed = aimSpeed;
-        } else{
+            endSpeed = sprintSpeed; 
+        }
+        else{
             endSpeed = moveSpeed;
         }
         
+        // Slows down time
+        if (aiming){
+            Time.timeScale = timeMultiplier;
+        }
+        else if (Time.timeScale != 1){
+            Time.timeScale = 1;
+        }
+
         // Creates gravity
         gravity -= 9.8f * Time.deltaTime;
         gravity *= gravityMultiplier;
@@ -139,26 +150,27 @@ public class Movement : MonoBehaviour{
                 // Adds vertical force
                 positionState = PositionState.onAir;
                 moveDirection.y = jumpForce;
+                PlaySound(jumpA);
             }
             else{
                 positionState = PositionState.onGround;
                 moveDirection.y = 0;
                 // Applies said speed to the movement if on ground (lets jump carry over speed)
-                if (controlLeft && !aiming){
-                    // Applies movement when sliding if sliding is possible (speed-wise)
-                    if (moveDirection.magnitude >= 2){
-                        moveDirection *= endSpeed >= 15 ? 0.985f : 0.970f;
-                    }
-                    else{
-                        moveDirection = Vector3.zero;
-                    }
-                }
-                else{
+//                if (controlLeft && !aiming){
+//                    // Applies movement when sliding if sliding is possible (speed-wise)
+//                    if (moveDirection.magnitude >= 2){
+//                        moveDirection *= endSpeed >= 15 ? 0.985f : 0.970f;
+//                    }
+//                    else{
+//                        moveDirection = Vector3.zero;
+//                    }
+//                }
+//                else{
                     // Applies movement when on ground and standing (Smooths out the start)
                     DOTween.To(()=> targerSpeed, x=> targerSpeed = x, endSpeed, 0.5f);
 //                    moveDirection = new Vector3(desiredMoveDirection.x * endSpeed, moveDirection.y, desiredMoveDirection.z * endSpeed);
                     moveDirection = new Vector3(desiredMoveDirection.x * targerSpeed, moveDirection.y, desiredMoveDirection.z * targerSpeed);
-                }
+//                }
             }
             gravity = 0f;
         }
@@ -206,6 +218,11 @@ public class Movement : MonoBehaviour{
         animator.SetFloat("Y direction", inputZ);
         animator.SetFloat("Speed", moveDirection.magnitude > 0.5f ? moveDirection.magnitude : 0f);
         animator.SetBool("Grounded", positionState == PositionState.onAir);
+    }
+
+    private void PlaySound(AudioClip audioClip){
+        charAudioSource.pitch = 1;
+        charAudioSource.PlayOneShot(audioClip);
     }
 
 }

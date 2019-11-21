@@ -3,6 +3,8 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using UnityEngine.UI;
+using DG.Tweening;
 
 public class MenuController : MonoBehaviour{
 
@@ -12,6 +14,7 @@ public class MenuController : MonoBehaviour{
         Second
     }
     private CurrentMenu currentMenu;
+    public Image fade;
 
     // Holds all the existing menus
     public GameObject[] menus;
@@ -30,6 +33,7 @@ public class MenuController : MonoBehaviour{
         currentMenu = CurrentMenu.First;
         Cursor.visible = true;
         Cursor.lockState = CursorLockMode.None;
+        FadeIn();
     }
 
     private void MenuSetup(){
@@ -62,7 +66,7 @@ public class MenuController : MonoBehaviour{
     }
 
     public void ButtonQuit(){
-        Application.Quit();
+        FadeOutQuit();
     }
 
     public void ButtonBack(){
@@ -71,17 +75,32 @@ public class MenuController : MonoBehaviour{
 
     public void ButtonTraining(){
         GameController.gameType = GameController.GameType.Training;
-        SceneManager.LoadScene("Arena");
+        FadeOutScene("Arena");
     }
     
     public void ButtonTiming(){
         GameController.gameType = GameController.GameType.Timing;
-        SceneManager.LoadScene("Arena");
+        FadeOutScene("Arena");
     }
     
     public void ButtonTesting(){
         GameController.gameType = GameController.GameType.Testing;
-        SceneManager.LoadScene("Arena");
+        FadeOutScene("Arena");
+    }
+
+    private void FadeIn(){
+        fade.color = Color.black;
+        fade.DOColor(Color.clear, 2.5f);
+    }
+
+    private void FadeOutScene(String sceneName){
+        fade.color = Color.clear;
+        fade.DOColor(Color.black, 1f).OnComplete(() => { SceneManager.LoadScene(sceneName); });
+    }
+
+    private void FadeOutQuit(){
+        fade.color = Color.clear;
+        fade.DOColor(Color.black, 1f).OnComplete(Application.Quit);
     }
 
 }

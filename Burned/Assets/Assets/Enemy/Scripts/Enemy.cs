@@ -25,17 +25,22 @@ public class Enemy : MonoBehaviour{
 
     public float speed;
     public float distance;
+    
+    [Header("Particles")]
+    public bool particleInheritVelocity;
+    public float particleMultiplier;
+    public float particleTimedExplosion;
 
     public ParticleSystem deathParticles;
     public Material eyeColor;
-    public GameObject pointLight;
-
+    
+    private GameObject pointLight;
     private Quaternion originalRotation;
 
     void Start(){
         enemyRigidbody = transform.GetChild(0).GetComponent<Rigidbody>();
         enemy = transform.GetChild(0).gameObject;
-        enemy.transform.GetChild(0).GetComponent<MeshRenderer>().material = eyeColor;
+        enemy.transform.GetChild(3).GetComponent<SkinnedMeshRenderer>().material = eyeColor;
         originalRotation = enemy.transform.rotation;
         pointLight = transform.GetChild(0).GetChild(1).gameObject;
         pointLight.GetComponent<Light>().color = eyeColor.color;
@@ -115,25 +120,28 @@ public class Enemy : MonoBehaviour{
         
 //        LockUnlockRotation(false);
 
-        yield return new WaitForSeconds(0.25f);
+        yield return new WaitForSeconds(particleTimedExplosion);
         var currentDeathParticle = Instantiate(deathParticles, enemy.transform.position, Quaternion.identity);
         
         ParticleSystem.ShapeModule editableShape = currentDeathParticle.shape;
-        editableShape.meshRenderer = transform.GetChild(0).GetComponent<MeshRenderer>();
+        editableShape.skinnedMeshRenderer = enemy.transform.GetChild(3).GetComponent<SkinnedMeshRenderer>();
 
-        ParticleSystem.VelocityOverLifetimeModule editableVelocity = currentDeathParticle.velocityOverLifetime;
-        editableVelocity.x = enemyRigidbody.velocity.x;
-        editableVelocity.y = enemyRigidbody.velocity.y;
-        editableVelocity.z = enemyRigidbody.velocity.z;
-        
+        if (particleInheritVelocity){
+            ParticleSystem.VelocityOverLifetimeModule editableVelocity = currentDeathParticle.velocityOverLifetime;
+            editableVelocity.x = enemyRigidbody.velocity.x / particleMultiplier;
+            editableVelocity.y = enemyRigidbody.velocity.y / particleMultiplier;
+            editableVelocity.z = enemyRigidbody.velocity.z / particleMultiplier;
+        }
+
         enemy.SetActive(false);
 
         // Checks the type of game mode to determine if the enemy will respawn
-        if (GameController.gameType == GameController.GameType.Training){
+        if (GameController.gameType == GameController.GameType.Training || GameController.gameType == GameController.GameType.Testing){
             yield return new WaitForSeconds(5f);
 
-            enemy.transform.position = transform.position;
+            enemy.transform.position = transform.position + new Vector3(0, -1.3f, 0);
             enemy.transform.rotation = originalRotation;
+            enemyRigidbody.useGravity = false;
 //        LockUnlockRotation(true);
 
             enemy.SetActive(true);

@@ -14,7 +14,8 @@ public class GameController : MonoBehaviour{
     public static GameType gameType;
 
     public int currentPoints, maxPoints;
-
+    public GameObject cubes;
+    
     public enum PlayerControl{
         ControllingPlayer,
         ControllingMenu,
@@ -24,6 +25,9 @@ public class GameController : MonoBehaviour{
 
     void Start(){
         playerControl = PlayerControl.ControllingPlayer;
+        if (Application.isEditor){
+            gameType = GameType.Testing;
+        }
     }
 
     void Update(){
@@ -45,16 +49,19 @@ public class GameController : MonoBehaviour{
                 } else if (Input.GetKey(KeyCode.Escape)){
                     SceneManager.LoadScene("Main Menu");
                 }
+                cubes.SetActive(false);
                 break;
             case GameType.Training:
                 if (Input.GetKey(KeyCode.Escape)){
                     SceneManager.LoadScene("Main Menu");
                 }
+                cubes.SetActive(true);
                 break;
             case GameType.Testing:
                 if (Input.GetKey(KeyCode.Escape)){
                     SceneManager.LoadScene("Main Menu");
                 }
+                cubes.SetActive(true);
                 break;
         }
     }
