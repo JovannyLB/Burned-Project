@@ -86,7 +86,7 @@ public class Movement : MonoBehaviour{
         
         // Keys
         shiftLeft = Input.GetKey(KeyCode.LeftShift);
-        spaceBar = Input.GetKey(KeyCode.Space);
+        spaceBar = Input.GetKeyDown(KeyCode.Space);
         controlLeft = Input.GetKey(KeyCode.LeftControl);
 
         aiming = GetComponent<PlayerController>().aiming;

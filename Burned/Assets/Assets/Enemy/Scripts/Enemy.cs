@@ -9,6 +9,8 @@ public class Enemy : MonoBehaviour{
 
     private bool goRight;
 
+    public AudioClip[] enemyCrash, enemyDeath;
+
     public enum HitState{
         NotHit,
         BeenHit
@@ -32,10 +34,12 @@ public class Enemy : MonoBehaviour{
     public float particleTimedExplosion;
 
     public ParticleSystem deathParticles;
+    public SkinnedMeshRenderer meshForParticles;
     public Material eyeColor;
     
     private GameObject pointLight;
     private Quaternion originalRotation;
+    
 
     void Start(){
         enemyRigidbody = transform.GetChild(0).GetComponent<Rigidbody>();
@@ -118,20 +122,15 @@ public class Enemy : MonoBehaviour{
     public IEnumerator Death(){
         hitState = HitState.BeenHit;
         
-//        LockUnlockRotation(false);
+        PlayDeathSound();
 
         yield return new WaitForSeconds(particleTimedExplosion);
-        var currentDeathParticle = Instantiate(deathParticles, enemy.transform.position, Quaternion.identity);
-        
-        ParticleSystem.ShapeModule editableShape = currentDeathParticle.shape;
-        editableShape.skinnedMeshRenderer = enemy.transform.GetChild(3).GetComponent<SkinnedMeshRenderer>();
 
-        if (particleInheritVelocity){
-            ParticleSystem.VelocityOverLifetimeModule editableVelocity = currentDeathParticle.velocityOverLifetime;
-            editableVelocity.x = enemyRigidbody.velocity.x / particleMultiplier;
-            editableVelocity.y = enemyRigidbody.velocity.y / particleMultiplier;
-            editableVelocity.z = enemyRigidbody.velocity.z / particleMultiplier;
-        }
+        meshForParticles.gameObject.transform.parent = null;
+        meshForParticles.gameObject.SetActive(true);
+
+        deathParticles.transform.parent = null;
+        deathParticles.gameObject.SetActive(true);
 
         enemy.SetActive(false);
 
@@ -142,10 +141,15 @@ public class Enemy : MonoBehaviour{
             enemy.transform.position = transform.position + new Vector3(0, -1.3f, 0);
             enemy.transform.rotation = originalRotation;
             enemyRigidbody.useGravity = false;
-//        LockUnlockRotation(true);
 
             enemy.SetActive(true);
-
+            
+            deathParticles.transform.parent = transform.GetChild(0);
+            
+            meshForParticles.gameObject.SetActive(false);
+            meshForParticles.gameObject.transform.parent = transform.GetChild(0);
+            
+            
             hitState = HitState.NotHit;
         } else if (GameController.gameType == GameController.GameType.Timing){
             FindObjectOfType<GameController>().currentPoints++;
@@ -154,6 +158,12 @@ public class Enemy : MonoBehaviour{
 
     private void LockUnlockRotation(bool lockUnlock){
         enemyRigidbody.freezeRotation = lockUnlock;
+    }
+
+    private void PlayDeathSound(){
+        GetComponent<AudioSource>().pitch = Random.Range(0.9f, 1.1f);
+        GetComponent<AudioSource>().PlayOneShot(enemyDeath[Random.Range(0, enemyDeath.Length)]);
+        GetComponent<AudioSource>().PlayOneShot(enemyCrash[Random.Range(0, enemyCrash.Length)]);
     }
 
 }

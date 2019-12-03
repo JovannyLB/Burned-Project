@@ -18,6 +18,7 @@ public class MenuController : MonoBehaviour{
 
     // Holds all the existing menus
     public GameObject[] menus;
+    public AudioClip audioMenu;
 
     void Start(){
         StartUp();
@@ -101,6 +102,10 @@ public class MenuController : MonoBehaviour{
     private void FadeOutQuit(){
         fade.color = Color.clear;
         fade.DOColor(Color.black, 1f).OnComplete(Application.Quit);
+    }
+
+    public void PlaySound(){
+        GetComponent<AudioSource>().PlayOneShot(audioMenu);
     }
 
 }

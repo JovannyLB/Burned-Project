@@ -54,15 +54,13 @@ public class BallController : MonoBehaviour{
                     moveTween = transform.DOMove(hand.transform.position, 0.25f);
                 }
                 
-                if (Input.GetMouseButtonDown(0)){
-                    if (player.GetComponent<PlayerController>().aiming){
-                        int layerMask = LayerMask.GetMask("Scenery", "Enemy");
+                if (Input.GetMouseButtonDown(0) && player.GetComponent<PlayerController>().aiming){
+                    int layerMask = LayerMask.GetMask("Scenery", "Enemy");
 
-                        Ray ray = Camera.main.ViewportPointToRay(new Vector3(0.5F, 0.5F, 0));
-                        RaycastHit hit;
-                        if (Physics.Raycast(ray, out hit, 1000f, layerMask)){
-                            transform.LookAt(hit.point);
-                        }
+                    Ray ray = Camera.main.ViewportPointToRay(new Vector3(0.5F, 0.5F, 0));
+                    RaycastHit hit;
+                    if (Physics.Raycast(ray, out hit, 1000f, layerMask)){
+                        transform.LookAt(hit.point);
                     }
                     
                     BallThrow();
@@ -84,6 +82,11 @@ public class BallController : MonoBehaviour{
                 if (Input.GetKeyDown(KeyCode.E) && GameController.gameType == GameController.GameType.Testing){
                     ballState = BallState.Inactive;
                 }
+                
+                if (Input.GetMouseButtonDown(1) && GameController.gameType == GameController.GameType.Testing){
+                    ballState = BallState.Inactive;
+                    BallBack();
+                }
                 break;
             case BallState.Inactive:
                 GetComponent<TrailRenderer>().emitting = true;
@@ -101,6 +104,8 @@ public class BallController : MonoBehaviour{
     }
 
     private void BallThrow(){
+        PlayNormalSound(ballAudio[2]);
+        
         ballRB.useGravity = false;
         ballRB.isKinematic = false;
         ballRB.collisionDetectionMode = CollisionDetectionMode.ContinuousDynamic;
@@ -115,7 +120,9 @@ public class BallController : MonoBehaviour{
 
     private void BallBack(){
         ballState = BallState.BeingHeld;
-
+        
+        PlayNormalSound(ballAudio[3]);
+        
         ballRB.useGravity = false;
         ballRB.collisionDetectionMode = CollisionDetectionMode.Discrete;
         ballRB.isKinematic = true;
@@ -140,7 +147,7 @@ public class BallController : MonoBehaviour{
     }
 
     private void OnTriggerEnter(Collider other){
-        if (other.transform.CompareTag("Player") && canBePickedUp || other.transform.CompareTag("ForceField") && canBePickedUp){
+        if (other.transform.CompareTag("Player") && canBePickedUp || other.transform.CompareTag("ForceField") && canBePickedUp && ballState != BallState.BeingHeld){
             BallBack();
         }
     }
@@ -157,7 +164,13 @@ public class BallController : MonoBehaviour{
     private void PlayBallSound(){
         ballAudioSource.pitch = Random.Range(0.75f, 1.25f);
         ballAudioSource.volume = ballRB.velocity.magnitude / 60;
-        ballAudioSource.PlayOneShot(ballAudio[Random.Range(0, ballAudio.Length)]);
+        ballAudioSource.PlayOneShot(ballAudio[Random.Range(0, 1)]);
+    }
+
+    private void PlayNormalSound(AudioClip sound){
+        ballAudioSource.pitch = Random.Range(0.9f, 1.1f);
+        ballAudioSource.volume = 0.5f;
+        ballAudioSource.PlayOneShot(sound);
     }
 
     private IEnumerator BallBackTimer(){

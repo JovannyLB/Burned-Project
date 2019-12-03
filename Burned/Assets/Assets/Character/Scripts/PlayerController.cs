@@ -17,12 +17,10 @@ public class PlayerController : MonoBehaviour{
     // UI
     private Image crossHair;
     
-    // Particles
-    public ParticleSystem deathParticles;
-    
     // Ball catcher
     public GameObject ballField;
-
+    public AudioClip[] forceFieldSounds;
+    
     void Start(){
         StartUp();
     }
@@ -31,10 +29,6 @@ public class PlayerController : MonoBehaviour{
         InputManager();
         CameraControl();
         Combat();
-
-        if (Input.GetKeyDown(KeyCode.F) && GameController.gameType == GameController.GameType.Testing){
-            Death();
-        }
     }
 
     // Gets components
@@ -83,27 +77,25 @@ public class PlayerController : MonoBehaviour{
         aiming = rightMouseButton;
         
         // Ball force field
-        if (Input.GetKey(KeyCode.Q) && !ballField.activeInHierarchy){
-            ballField.SetActive(true);
+        if (Input.GetKey(KeyCode.Q) && !ballField.GetComponent<MeshRenderer>().enabled){
+            ballField.GetComponent<MeshRenderer>().enabled = true;
+            ballField.GetComponent<SphereCollider>().enabled = true;
             ballField.transform.localScale = Vector3.zero;
-            ballField.transform.DOScale(new Vector3(7, 7, 7), 1f);
+            ballField.transform.DOScale(new Vector3(7, 7, 7), 1f).OnComplete(() => ballField.GetComponent<AudioSource>().Play());
+            ballField.GetComponent<AudioSource>().PlayOneShot(forceFieldSounds[0]);
         }
-        else if(!Input.GetKey(KeyCode.Q) && ballField.activeInHierarchy){
+        else if(Input.GetKeyUp(KeyCode.Q) && ballField.GetComponent<MeshRenderer>().enabled){
+            ballField.GetComponent<AudioSource>().Stop();
+            ballField.GetComponent<AudioSource>().PlayOneShot(forceFieldSounds[2]);
             ballField.transform.DOScale(new Vector3(0, 0, 0), 1f).OnComplete(() => {
-                ballField.SetActive(false);
+                ballField.GetComponent<MeshRenderer>().enabled = false;
+                ballField.GetComponent<SphereCollider>().enabled = false;
             });
         }
-    }
 
-    private void Death(){
-        var currentDeathParticle = Instantiate(deathParticles, transform.position, Quaternion.identity);
-        
-        ParticleSystem.ShapeModule editableShape = currentDeathParticle.shape;
-        editableShape.skinnedMeshRenderer = transform.GetChild(0).GetChild(2).GetComponent<SkinnedMeshRenderer>();
+        if (!ballField.GetComponent<MeshRenderer>().enabled){
+            ballField.GetComponent<AudioSource>().Stop();
+        }
 
-        ParticleSystem.VelocityOverLifetimeModule editableVelocity = currentDeathParticle.velocityOverLifetime;
-        editableVelocity.x = characterController.velocity.x;
-        editableVelocity.y = characterController.velocity.y;
-        editableVelocity.z = characterController.velocity.z;
     }
 }

@@ -14,8 +14,9 @@ public class GameController : MonoBehaviour{
     public static GameType gameType;
 
     public int currentPoints, maxPoints;
-    public GameObject cubes;
-    
+    public GameObject cubes, tutorial, tutorialTest, tutorialTip;
+    private bool tutorialSwitch = false;
+
     public enum PlayerControl{
         ControllingPlayer,
         ControllingMenu,
@@ -38,6 +39,32 @@ public class GameController : MonoBehaviour{
             Cursor.visible = true;
             Cursor.lockState = CursorLockMode.None;
         }
+
+        if (Input.GetKeyDown(KeyCode.Return)){
+            tutorialSwitch = !tutorialSwitch;
+        }
+
+        if (tutorialSwitch){
+            if (gameType != GameType.Testing){
+                tutorial.SetActive(true);
+            }
+            else{
+                tutorialTest.SetActive(true);
+            }
+            
+            tutorialTip.SetActive(false);
+        }
+        else{
+            if (gameType != GameType.Testing){
+                tutorial.SetActive(false);
+            }
+            else{
+                tutorialTest.SetActive(false);
+            }
+
+            tutorialTip.SetActive(true);
+        }
+        
         GameplayLoop();
     }
 
@@ -55,7 +82,7 @@ public class GameController : MonoBehaviour{
                 if (Input.GetKey(KeyCode.Escape)){
                     SceneManager.LoadScene("Main Menu");
                 }
-                cubes.SetActive(true);
+                cubes.SetActive(false);
                 break;
             case GameType.Testing:
                 if (Input.GetKey(KeyCode.Escape)){
